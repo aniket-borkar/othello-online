@@ -2,7 +2,6 @@ node_modules/
 data/othello.db
 data/othello.db-shm
 data/othello.db-wal
-public/js/discord-sdk.bundle.js
 .env
 
 # System/editor files
