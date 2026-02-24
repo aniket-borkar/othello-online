@@ -1,6 +1,7 @@
 /**
  * socket-client.js
  * Socket.IO client wrapper. Handles all server communication.
+ * Always uses WebSocket transport (required for Discord Activity proxy).
  */
 (function () {
   'use strict';
@@ -9,23 +10,16 @@
 
   var socket = null;
   var rooms = []; // local rooms cache
-  var eventHandlers = {}; // custom event handlers registered via on()
 
   function connect(sessionId) {
     if (socket && socket.connected) {
       socket.disconnect();
     }
 
-    var options = {
+    socket = io({
       auth: { sessionId: sessionId },
-    };
-
-    // In Discord Activity mode, force WebSocket transport (proxy doesn't support long-polling)
-    if (window.Othello.Discord && window.Othello.Discord.isDiscordMode()) {
-      options.transports = ['websocket'];
-    }
-
-    socket = io(options);
+      transports: ['websocket'],
+    });
 
     // --- Connection lifecycle ---
 
@@ -38,27 +32,10 @@
           }
         }
       });
-      if (window.Othello.App) {
-        window.Othello.App.onConnected();
-      }
-    });
-
-    socket.on('connect_error', function (err) {
-      if (err && err.message && (
-        err.message.indexOf('Authentication') !== -1 ||
-        err.message.indexOf('Invalid') !== -1 ||
-        err.message.indexOf('expired') !== -1
-      )) {
-        localStorage.removeItem('sessionId');
-        localStorage.removeItem('user');
-        if (window.Othello.App) {
-          window.Othello.App.showView('auth');
-        }
-      }
     });
 
     socket.on('disconnect', function () {
-      // Could show a reconnecting indicator; Socket.IO auto-reconnects by default
+      // Socket.IO auto-reconnects by default
     });
 
     // --- Lobby events ---
@@ -71,7 +48,6 @@
     });
 
     socket.on('lobby:room-created', function (room) {
-      // Add to local cache
       var exists = false;
       for (var i = 0; i < rooms.length; i++) {
         if (rooms[i].id === room.id) {
@@ -109,7 +85,6 @@
     });
 
     socket.on('lobby:online-count', function (count) {
-      // The server sends either a number directly or an object with .count
       var c = typeof count === 'object' ? count.count : count;
       if (window.Othello.LobbyView) {
         window.Othello.LobbyView.updateOnlineCount(c);
@@ -210,13 +185,13 @@
       }
     });
 
-    socket.on('game:rematch-requested', function (data) {
+    socket.on('game:rematch-requested', function () {
       if (window.Othello.GameView) {
         window.Othello.GameView.onRematchOffered();
       }
     });
 
-    socket.on('game:rematch-declined', function (data) {
+    socket.on('game:rematch-declined', function () {
       if (window.Othello.GameView) {
         window.Othello.GameView.setStatus('Rematch declined.', false);
       }
@@ -252,9 +227,6 @@
     if (socket) {
       socket.on(event, callback);
     }
-    // Store for late-binding if socket isn't ready
-    if (!eventHandlers[event]) eventHandlers[event] = [];
-    eventHandlers[event].push(callback);
   }
 
   function getSocket() {

@@ -32,7 +32,7 @@
             '<span class="elo-badge">' + (currentUser.elo || 1200) + ' ELO</span>' +
             '<span class="online-count" id="online-count">0 online</span>' +
           '</div>' +
-          '<button class="btn btn-secondary" id="logout-btn">Logout</button>' +
+          '' +
         '</div>' +
         '<!-- Content (two-column grid) -->' +
         '<div class="lobby-content">' +
@@ -67,20 +67,6 @@
       '</div>';
 
     container.innerHTML = html;
-
-    // Event listeners
-    var logoutBtn = container.querySelector('#logout-btn');
-    if (window.Othello.Discord && window.Othello.Discord.isDiscordMode()) {
-      // Hide logout in Discord mode — users just close the activity
-      logoutBtn.style.display = 'none';
-    } else {
-      logoutBtn.addEventListener('click', function () {
-        localStorage.removeItem('sessionId');
-        localStorage.removeItem('user');
-        window.Othello.Socket.disconnect();
-        window.Othello.App.showView('auth');
-      });
-    }
 
     container.querySelector('#create-room-btn').addEventListener('click', function () {
       var name = prompt('Room name:', currentUser.username + "'s Room");

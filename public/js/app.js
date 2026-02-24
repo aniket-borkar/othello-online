@@ -1,13 +1,14 @@
 /**
  * app.js
  * SPA router and entry point. Manages view transitions.
+ * Discord Activity only — no standalone auth.
  */
 (function () {
   'use strict';
 
   window.Othello = window.Othello || {};
 
-  var currentView = null; // 'auth', 'lobby', 'game'
+  var currentView = null; // 'lobby', 'game'
   var currentUser = null;
 
   function showView(name, data) {
@@ -15,9 +16,7 @@
     if (!appContainer) return;
 
     // Destroy previous view
-    if (currentView === 'auth' && window.Othello.AuthView) {
-      window.Othello.AuthView.destroy();
-    } else if (currentView === 'lobby' && window.Othello.LobbyView) {
+    if (currentView === 'lobby' && window.Othello.LobbyView) {
       window.Othello.LobbyView.destroy();
     } else if (currentView === 'game' && window.Othello.GameView) {
       window.Othello.GameView.destroy();
@@ -33,9 +32,6 @@
 
     // Render the new view
     switch (name) {
-      case 'auth':
-        window.Othello.AuthView.render(appContainer, data);
-        break;
       case 'lobby':
         var user = data || getCurrentUser();
         window.Othello.LobbyView.render(appContainer, user);
@@ -44,7 +40,6 @@
         window.Othello.GameView.render(appContainer, data || {});
         break;
       default:
-        window.Othello.AuthView.render(appContainer);
         break;
     }
 
@@ -54,19 +49,6 @@
         appContainer.classList.add('view-active');
       });
     });
-  }
-
-  function onAuthSuccess(user) {
-    currentUser = user;
-    var sessionId = localStorage.getItem('sessionId');
-    if (sessionId) {
-      window.Othello.Socket.connect(sessionId);
-    }
-    showView('lobby', user);
-  }
-
-  function onConnected() {
-    // Socket connected successfully - could update UI indicators
   }
 
   function getCurrentUser() {
@@ -83,93 +65,43 @@
 
   // --- Initialize on DOMContentLoaded ---
   document.addEventListener('DOMContentLoaded', function () {
-    // --- Discord Activity Mode ---
-    if (window.Othello.Discord && window.Othello.Discord.isDiscordMode()) {
-      window.Othello.Discord.initialize()
-        .then(function (result) {
-          var user = result.appUser;
-          currentUser = user;
-          localStorage.setItem('sessionId', result.sessionId);
-          localStorage.setItem('user', JSON.stringify(user));
+    var appContainer = document.getElementById('app');
 
-          window.Othello.Socket.connect(result.sessionId);
-          showView('lobby', user);
-        })
-        .catch(function (err) {
-          console.error('Discord SDK init failed:', err);
-          var appContainer = document.getElementById('app');
-          if (appContainer) {
-            appContainer.innerHTML =
-              '<div style="text-align:center;padding:3rem;color:#e0e0e0;">' +
-              '<h2>Connection Error</h2>' +
-              '<p>Failed to connect to Discord. Please try relaunching the activity.</p>' +
-              '</div>';
-          }
-        });
-      return;
+    // Show loading state
+    if (appContainer) {
+      appContainer.innerHTML =
+        '<div style="text-align:center;padding:4rem;color:#6b6b8d;">' +
+        '<h1 class="logo">OTHELLO</h1>' +
+        '<p style="margin-top:1rem;">Connecting to Discord...</p>' +
+        '</div>';
     }
 
-    // --- Standalone Mode ---
-    var params = new URLSearchParams(window.location.search);
+    // Initialize Discord SDK
+    window.Othello.Discord.initialize()
+      .then(function (result) {
+        var user = result.appUser;
+        currentUser = user;
+        localStorage.setItem('sessionId', result.sessionId);
+        localStorage.setItem('user', JSON.stringify(user));
 
-    // Handle OAuth callback redirect: /?sessionId=xxx&username=xxx&elo=xxx
-    var oauthSessionId = params.get('sessionId');
-    if (oauthSessionId) {
-      var username = params.get('username') || 'Player';
-      var elo = parseInt(params.get('elo'), 10) || 1200;
-      var userId = params.get('userId');
-
-      var user = { id: userId, username: username, elo: elo };
-      localStorage.setItem('sessionId', oauthSessionId);
-      localStorage.setItem('user', JSON.stringify(user));
-
-      // Clean URL
-      window.history.replaceState({}, document.title, '/');
-
-      currentUser = user;
-      window.Othello.Socket.connect(oauthSessionId);
-      showView('lobby', user);
-      return;
-    }
-
-    // Handle password reset link: /?reset=TOKEN
-    var resetToken = params.get('reset');
-    if (resetToken) {
-      showView('auth', { mode: 'reset', token: resetToken });
-      return;
-    }
-
-    // Handle OAuth error
-    var error = params.get('error');
-    if (error) {
-      window.history.replaceState({}, document.title, '/');
-      // Show auth with error — will display after render
-      showView('auth');
-      return;
-    }
-
-    // Normal flow: check for existing session
-    var sessionId = localStorage.getItem('sessionId');
-    var storedUser = null;
-
-    try {
-      var raw = localStorage.getItem('user');
-      if (raw) storedUser = JSON.parse(raw);
-    } catch (e) { /* ignore */ }
-
-    if (sessionId && storedUser) {
-      currentUser = storedUser;
-      window.Othello.Socket.connect(sessionId);
-      showView('lobby', storedUser);
-    } else {
-      showView('auth');
-    }
+        window.Othello.Socket.connect(result.sessionId);
+        showView('lobby', user);
+      })
+      .catch(function (err) {
+        console.error('Discord SDK init failed:', err);
+        if (appContainer) {
+          appContainer.innerHTML =
+            '<div style="text-align:center;padding:3rem;color:#e0e0e0;">' +
+            '<h2>Connection Error</h2>' +
+            '<p>Failed to connect to Discord. Please try relaunching the activity.</p>' +
+            '<p style="color:#6b6b8d;font-size:0.85rem;margin-top:1rem;">' + (err.message || '') + '</p>' +
+            '</div>';
+        }
+      });
   });
 
   window.Othello.App = {
     showView: showView,
-    onAuthSuccess: onAuthSuccess,
-    onConnected: onConnected,
     getCurrentUser: getCurrentUser,
   };
 })();

@@ -12,16 +12,7 @@ var discordAccessToken = null;
 var discordSdk = null;
 
 /**
- * Detect if we are running inside a Discord Activity iframe.
- */
-function isDiscordMode() {
-  var params = new URLSearchParams(window.location.search);
-  return !!(params.get('frame_id') && params.get('instance_id'));
-}
-
-/**
  * Initialize the Discord SDK, perform OAuth, and return user info.
- * Call only in Discord mode.
  */
 async function initialize() {
   // Fetch client ID from server
@@ -79,18 +70,12 @@ function getUser() {
   return discordUser;
 }
 
-function getAccessToken() {
-  return discordAccessToken;
-}
-
 function getSdk() {
   return discordSdk;
 }
 
 window.Othello.Discord = {
-  isDiscordMode: isDiscordMode,
   initialize: initialize,
   getUser: getUser,
-  getAccessToken: getAccessToken,
   getSdk: getSdk,
 };

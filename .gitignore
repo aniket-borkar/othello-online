@@ -18,6 +18,9 @@ public/js/discord-sdk.bundle.js
 .vscode/
 .claude/
 
+# Old single-file version
+index.html
+
 # Git bare repo artifacts
 HEAD
 objects/

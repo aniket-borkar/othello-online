@@ -22,10 +22,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
-    email TEXT UNIQUE COLLATE NOCASE,
-    password_hash TEXT,
-    oauth_provider TEXT,
-    oauth_id TEXT,
+    oauth_provider TEXT NOT NULL DEFAULT 'discord',
+    oauth_id TEXT NOT NULL,
     elo INTEGER NOT NULL DEFAULT 1200,
     games_played INTEGER NOT NULL DEFAULT 0,
     wins INTEGER NOT NULL DEFAULT 0,
@@ -50,35 +48,21 @@ db.exec(`
     result TEXT NOT NULL CHECK(result IN ('black','white','draw')),
     ended_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
-
-  CREATE TABLE IF NOT EXISTS password_reset_tokens (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id),
-    token TEXT NOT NULL UNIQUE,
-    expires_at TEXT NOT NULL,
-    used INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
-  );
 `);
 
-// Create indexes (IF NOT EXISTS is supported for indexes)
+// Create indexes
 db.exec(`
   CREATE INDEX IF NOT EXISTS idx_games_black_user_id ON games(black_user_id);
   CREATE INDEX IF NOT EXISTS idx_games_white_user_id ON games(white_user_id);
   CREATE INDEX IF NOT EXISTS idx_users_elo ON users(elo DESC);
-  CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 `);
 
 // Prepared statements
 const stmtGetUserById = db.prepare('SELECT * FROM users WHERE id = ?');
 const stmtGetUserByUsername = db.prepare('SELECT * FROM users WHERE username = ?');
-const stmtGetUserByEmail = db.prepare('SELECT * FROM users WHERE email = ?');
 const stmtGetUserByOAuth = db.prepare('SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?');
-const stmtCreateUser = db.prepare(
-  'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)'
-);
 const stmtCreateOAuthUser = db.prepare(
-  'INSERT INTO users (username, email, oauth_provider, oauth_id) VALUES (?, ?, ?, ?)'
+  'INSERT INTO users (username, oauth_provider, oauth_id) VALUES (?, ?, ?)'
 );
 const stmtUpdateUserElo = db.prepare(
   'UPDATE users SET elo = ? WHERE id = ?'
@@ -99,21 +83,6 @@ const stmtGetUserStats = db.prepare(`
     (SELECT COUNT(*) FROM games g WHERE (g.black_user_id = u.id OR g.white_user_id = u.id)) AS total_games
   FROM users u WHERE u.id = ?
 `);
-const stmtCreateResetToken = db.prepare(
-  'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)'
-);
-const stmtGetResetToken = db.prepare(
-  'SELECT * FROM password_reset_tokens WHERE token = ? AND used = 0'
-);
-const stmtMarkTokenUsed = db.prepare(
-  'UPDATE password_reset_tokens SET used = 1 WHERE id = ?'
-);
-const stmtUpdateUserPassword = db.prepare(
-  'UPDATE users SET password_hash = ? WHERE id = ?'
-);
-const stmtLinkOAuth = db.prepare(
-  'UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?'
-);
 
 function getUserById(id) {
   return stmtGetUserById.get(id) || null;
@@ -123,21 +92,12 @@ function getUserByUsername(username) {
   return stmtGetUserByUsername.get(username) || null;
 }
 
-function getUserByEmail(email) {
-  return stmtGetUserByEmail.get(email) || null;
-}
-
 function getUserByOAuth(provider, oauthId) {
   return stmtGetUserByOAuth.get(provider, oauthId) || null;
 }
 
-function createUser(username, email, passwordHash) {
-  const info = stmtCreateUser.run(username, email, passwordHash);
-  return info.lastInsertRowid;
-}
-
-function createOAuthUser(username, email, provider, oauthId) {
-  const info = stmtCreateOAuthUser.run(username, email, provider, oauthId);
+function createOAuthUser(username, provider, oauthId) {
+  const info = stmtCreateOAuthUser.run(username, provider, oauthId);
   return info.lastInsertRowid;
 }
 
@@ -174,43 +134,15 @@ function getUserStats(userId) {
   return stmtGetUserStats.get(userId) || null;
 }
 
-function createResetToken(userId, token, expiresAt) {
-  const info = stmtCreateResetToken.run(userId, token, expiresAt);
-  return info.lastInsertRowid;
-}
-
-function getResetToken(token) {
-  return stmtGetResetToken.get(token) || null;
-}
-
-function markTokenUsed(tokenId) {
-  stmtMarkTokenUsed.run(tokenId);
-}
-
-function updateUserPassword(userId, passwordHash) {
-  stmtUpdateUserPassword.run(passwordHash, userId);
-}
-
-function linkOAuth(userId, provider, oauthId) {
-  stmtLinkOAuth.run(provider, oauthId, userId);
-}
-
 module.exports = {
   db,
   getUserById,
   getUserByUsername,
-  getUserByEmail,
   getUserByOAuth,
-  createUser,
   createOAuthUser,
   updateUserElo,
   updateUserStats,
   recordGame,
   getLeaderboard,
   getUserStats,
-  createResetToken,
-  getResetToken,
-  markTokenUsed,
-  updateUserPassword,
-  linkOAuth,
 };
