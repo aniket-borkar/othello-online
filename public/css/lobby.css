@@ -1,0 +1,352 @@
+/* ============================================
+   OTHELLO PREMIUM - Lobby
+   Dark Glassmorphism Design
+   ============================================ */
+
+/* --- Lobby Container --- */
+.lobby-container {
+  max-width: 1000px;
+  width: 95%;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+}
+
+/* --- Lobby Header (Glass Bar) --- */
+.lobby-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 8px 32px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* --- User Info --- */
+.lobby-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.lobby-user-info .username {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+/* --- User Avatar --- */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 -2px 4px rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.2);
+}
+
+/* --- Elo Badge --- */
+.elo-badge {
+  background: linear-gradient(135deg, rgba(245, 197, 66, 0.12), rgba(245, 197, 66, 0.05));
+  color: var(--gold);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  border: 1px solid rgba(245, 197, 66, 0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* --- Online Count --- */
+.online-count {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.online-count::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22d3a7;
+  box-shadow: 0 0 8px rgba(34, 211, 167, 0.5);
+  flex-shrink: 0;
+  margin-right: 0.4rem;
+  animation: onlinePulse 2s infinite;
+}
+
+@keyframes onlinePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* --- Lobby Content (Grid Layout) --- */
+.lobby-content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .lobby-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Lobby Actions --- */
+.lobby-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Quick Match Button --- */
+.quick-match-btn {
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  background: linear-gradient(135deg, var(--accent), #17c49a);
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-family: var(--font-body);
+  color: #080808;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 8px 24px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.quick-match-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(34, 211, 167, 0.35);
+}
+
+.quick-match-btn:active {
+  transform: translateY(0);
+}
+
+/* Quick match searching state */
+.quick-match-btn.searching {
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.quick-match-btn.searching::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 16px;
+  background: conic-gradient(from var(--angle, 0deg), transparent 60%, var(--accent));
+  z-index: -1;
+  animation: borderSpin 2s linear infinite;
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes borderSpin {
+  to { --angle: 360deg; }
+}
+
+/* Fallback pulse for browsers without @property support */
+.quick-match-btn.searching::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--accent);
+  border-radius: 18px;
+  animation: searchPulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes searchPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+}
+
+/* --- Rooms Section --- */
+.rooms-section {
+  margin-top: 0.5rem;
+}
+
+.rooms-section h2 {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* --- Rooms Grid --- */
+.rooms-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* --- Room Card --- */
+.room-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+
+.room-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 16px 48px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.06);
+  background: var(--bg-card-hover);
+}
+
+.room-card .room-host {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+
+.room-card .room-elo {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+.room-card .room-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.room-card .room-status .waiting {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.room-card .room-status .in-progress {
+  color: var(--purple);
+  font-size: 0.85rem;
+}
+
+.room-card .btn {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+}
+
+/* --- Leaderboard Section (Sidebar) --- */
+.leaderboard-section {
+  margin-top: 0.5rem;
+}
+
+.leaderboard-section h2 {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* --- Leaderboard Table --- */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+}
+
+.leaderboard-table th {
+  padding: 0.6rem 1rem;
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.leaderboard-table td {
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.leaderboard-table tr td:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.leaderboard-table tr td:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.leaderboard-table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* --- Rank Colors --- */
+.rank-1 {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.rank-2 {
+  color: #c0c0c0;
+  font-weight: 700;
+}
+
+.rank-3 {
+  color: #cd7f32;
+  font-weight: 700;
+}
+
+/* --- Empty State --- */
+.lobby-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px dashed var(--border-subtle);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.2);
+}

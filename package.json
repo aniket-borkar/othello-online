@@ -1,0 +1,26 @@
+{
+  "name": "othello-online",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "esbuild src/discord-sdk.js --bundle --format=iife --outfile=public/js/discord-sdk.bundle.js --minify",
+    "dev": "npm run build && node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Multiplayer Othello with ELO ratings",
+  "dependencies": {
+    "@discord/embedded-app-sdk": "^2.4.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.1",
+    "socket.io": "^4.8.3",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.3"
+  }
+}
