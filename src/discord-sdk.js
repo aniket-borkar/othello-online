@@ -7,30 +7,25 @@ import { DiscordSDK } from '@discord/embedded-app-sdk';
 
 window.Othello = window.Othello || {};
 
+var CLIENT_ID = '1475850052823158866';
 var discordUser = null;
 var discordAccessToken = null;
-var discordSdk = null;
+
+// Create SDK instance immediately at module scope (not deferred).
+// Discord expects the SDK to be constructed early so it can set up
+// the postMessage listener for the handshake.
+var discordSdk = new DiscordSDK(CLIENT_ID);
 
 /**
  * Initialize the Discord SDK, perform OAuth, and return user info.
  */
 async function initialize() {
-  // Fetch client ID from server
-  var configRes = await fetch('/api/discord-config');
-  var config = await configRes.json();
-  var clientId = config.clientId;
-  if (!clientId) {
-    throw new Error('Discord client ID not configured on server');
-  }
-
-  discordSdk = new DiscordSDK(clientId);
-
   // Wait for Discord client handshake
   await discordSdk.ready();
 
   // Request OAuth authorization from the user
   var authResult = await discordSdk.commands.authorize({
-    client_id: clientId,
+    client_id: CLIENT_ID,
     response_type: 'code',
     state: '',
     prompt: 'none',
