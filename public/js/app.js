@@ -76,28 +76,9 @@
         '</div>';
     }
 
-    // Debug helper — shows status on-screen since DevTools isn't available in Discord
-    var debugEl = document.createElement('div');
-    debugEl.id = 'debug-log';
-    debugEl.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);color:#0f0;font:11px monospace;padding:8px;max-height:30vh;overflow-y:auto;z-index:9999;';
-    document.body.appendChild(debugEl);
-    function dbg(msg) {
-      console.log('[Othello]', msg);
-      var line = document.createElement('div');
-      line.textContent = new Date().toISOString().substr(11, 12) + ' ' + msg;
-      debugEl.appendChild(line);
-      debugEl.scrollTop = debugEl.scrollHeight;
-    }
-
-    dbg('URL: ' + location.href);
-    dbg('frame_id: ' + (new URLSearchParams(location.search).get('frame_id') || 'MISSING'));
-    dbg('instance_id: ' + (new URLSearchParams(location.search).get('instance_id') || 'MISSING'));
-
     // Initialize Discord SDK
-    dbg('Calling Discord.initialize()...');
     window.Othello.Discord.initialize()
       .then(function (result) {
-        dbg('SDK init SUCCESS — user: ' + (result.appUser && result.appUser.username));
         var user = result.appUser;
         currentUser = user;
         localStorage.setItem('sessionId', result.sessionId);
@@ -105,12 +86,8 @@
 
         window.Othello.Socket.connect(result.sessionId);
         showView('lobby', user);
-        // Remove debug overlay on success
-        var d = document.getElementById('debug-log');
-        if (d) d.remove();
       })
       .catch(function (err) {
-        dbg('SDK init FAILED: ' + (err.code || '') + ' ' + (err.message || String(err)));
         console.error('Discord SDK init failed:', err);
         if (appContainer) {
           appContainer.innerHTML =
