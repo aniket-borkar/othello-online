@@ -69,10 +69,16 @@
     container.innerHTML = html;
 
     container.querySelector('#create-room-btn').addEventListener('click', function () {
-      var name = prompt('Room name:', currentUser.username + "'s Room");
-      if (name === null) return; // cancelled
-      if (!name.trim()) name = currentUser.username + "'s Room";
-      window.Othello.Socket.emit('lobby:create', { name: name.trim() });
+      showModal({
+        title: 'Create Room',
+        inputDefault: currentUser.username + "'s Room",
+        inputPlaceholder: 'Room name',
+        confirmLabel: 'Create',
+        onConfirm: function (name) {
+          if (!name.trim()) name = currentUser.username + "'s Room";
+          window.Othello.Socket.emit('lobby:create', { name: name.trim() });
+        },
+      });
     });
 
     container.querySelector('#quick-match-btn').addEventListener('click', function () {
@@ -106,6 +112,72 @@
     window.Othello.Socket.emit('leaderboard:request', { limit: 20 }, function (data) {
       if (data) {
         updateLeaderboard(data);
+      }
+    });
+  }
+
+  /**
+   * Custom modal to replace prompt/confirm/alert (blocked in Discord iframe).
+   * opts: { title, message, inputDefault, inputPlaceholder, confirmLabel, cancelLabel, onConfirm, onCancel }
+   * If inputDefault/inputPlaceholder are set, shows a text input (prompt mode).
+   * If only message is set, shows a confirm dialog.
+   */
+  function showModal(opts) {
+    var backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    var box = document.createElement('div');
+    box.className = 'modal-box';
+
+    var html = '<h3>' + (opts.title || 'Confirm') + '</h3>';
+    if (opts.message) {
+      html += '<p style="color:var(--text-secondary);margin-bottom:1rem;">' + opts.message + '</p>';
+    }
+    if (opts.inputDefault !== undefined || opts.inputPlaceholder) {
+      html += '<input class="input-field" id="modal-input" type="text" placeholder="' +
+        (opts.inputPlaceholder || '') + '" value="' + (opts.inputDefault || '') + '">';
+    }
+    html += '<div class="modal-buttons">' +
+      '<button class="btn btn-secondary" id="modal-cancel">' + (opts.cancelLabel || 'Cancel') + '</button>' +
+      '<button class="btn btn-primary" id="modal-confirm">' + (opts.confirmLabel || 'OK') + '</button>' +
+      '</div>';
+
+    box.innerHTML = html;
+    backdrop.appendChild(box);
+    document.body.appendChild(backdrop);
+
+    var input = box.querySelector('#modal-input');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+
+    function close() { backdrop.remove(); }
+
+    box.querySelector('#modal-cancel').addEventListener('click', function () {
+      close();
+      if (opts.onCancel) opts.onCancel();
+    });
+
+    box.querySelector('#modal-confirm').addEventListener('click', function () {
+      var val = input ? input.value : true;
+      close();
+      if (opts.onConfirm) opts.onConfirm(val);
+    });
+
+    if (input) {
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          var val = input.value;
+          close();
+          if (opts.onConfirm) opts.onConfirm(val);
+        }
+      });
+    }
+
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) {
+        close();
+        if (opts.onCancel) opts.onCancel();
       }
     });
   }
@@ -243,5 +315,6 @@
     updateOnlineCount: updateOnlineCount,
     updateLeaderboard: updateLeaderboard,
     setSearchingState: setSearchingState,
+    showModal: showModal,
   };
 })();

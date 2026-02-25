@@ -105,7 +105,9 @@
 
     socket.on('lobby:error', function (data) {
       var msg = (data && data.message) || (data && data.error) || 'Lobby error.';
-      alert(msg);
+      if (window.Othello.LobbyView && window.Othello.LobbyView.showModal) {
+        window.Othello.LobbyView.showModal({ title: 'Error', message: msg, confirmLabel: 'OK' });
+      }
     });
 
     // --- Leaderboard ---

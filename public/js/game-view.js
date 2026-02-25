@@ -161,9 +161,14 @@
     // Action button handlers
     if (gameState.mode === 'multiplayer') {
       container.querySelector('#resign-btn').addEventListener('click', function () {
-        if (confirm('Are you sure you want to resign?')) {
-          window.Othello.Socket.emit('game:resign', { gameId: gameState.gameId });
-        }
+        window.Othello.LobbyView.showModal({
+          title: 'Resign',
+          message: 'Are you sure you want to resign?',
+          confirmLabel: 'Resign',
+          onConfirm: function () {
+            window.Othello.Socket.emit('game:resign', { gameId: gameState.gameId });
+          },
+        });
       });
     } else {
       container.querySelector('#new-game-btn').addEventListener('click', function () {
