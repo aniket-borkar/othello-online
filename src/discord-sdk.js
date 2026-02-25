@@ -12,16 +12,25 @@ var discordUser = null;
 var discordAccessToken = null;
 
 // Create SDK instance immediately at module scope (not deferred).
-// Discord expects the SDK to be constructed early so it can set up
-// the postMessage listener for the handshake.
-var discordSdk = new DiscordSDK(CLIENT_ID);
+var discordSdk = null;
+try {
+  discordSdk = new DiscordSDK(CLIENT_ID);
+  if (window._dbg) window._dbg('DiscordSDK constructed OK, clientId=' + CLIENT_ID);
+} catch (e) {
+  if (window._dbg) window._dbg('DiscordSDK constructor FAILED: ' + e.message);
+}
 
 /**
  * Initialize the Discord SDK, perform OAuth, and return user info.
  */
 async function initialize() {
+  if (!discordSdk) {
+    throw new Error('DiscordSDK failed to construct — check debug log');
+  }
   // Wait for Discord client handshake
+  if (window._dbg) window._dbg('Calling discordSdk.ready()...');
   await discordSdk.ready();
+  if (window._dbg) window._dbg('ready() succeeded');
 
   // Request OAuth authorization from the user
   var authResult = await discordSdk.commands.authorize({
