@@ -46,18 +46,38 @@ app.post('/api/token', async (req, res) => {
         code: code,
       }).toString(),
     });
-    const tokenData = await tokenRes.json();
+
+    const tokenText = await tokenRes.text();
+    console.log('Discord token response:', tokenRes.status, tokenText.substring(0, 300));
+
+    let tokenData;
+    try {
+      tokenData = JSON.parse(tokenText);
+    } catch (e) {
+      return res.status(502).json({
+        error: 'Discord returned non-JSON (status ' + tokenRes.status + '): ' + tokenText.substring(0, 200),
+      });
+    }
 
     if (!tokenData.access_token) {
       console.error('Discord token exchange failed:', tokenData);
-      return res.status(400).json({ error: 'Token exchange failed.' });
+      return res.status(400).json({ error: 'Token exchange failed: ' + (tokenData.error_description || tokenData.error || 'unknown') });
     }
 
     // Fetch the Discord user profile
     const userRes = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-    const discordUser = await userRes.json();
+
+    const userText = await userRes.text();
+    let discordUser;
+    try {
+      discordUser = JSON.parse(userText);
+    } catch (e) {
+      return res.status(502).json({
+        error: 'Discord user API returned non-JSON (status ' + userRes.status + ')',
+      });
+    }
 
     // Find or create the user in our app database
     const result = auth.findOrCreateOAuthUser(
