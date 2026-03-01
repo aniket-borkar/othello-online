@@ -6,25 +6,43 @@
   <title>Othello Online</title>
 
   <!-- CSS (fonts self-hosted for Discord CSP compatibility) -->
-  <link rel="stylesheet" href="/css/main.css?v=3">
-  <link rel="stylesheet" href="/css/lobby.css?v=3">
-  <link rel="stylesheet" href="/css/board.css?v=3">
+  <link rel="stylesheet" href="/css/main.css?v=4">
+  <link rel="stylesheet" href="/css/lobby.css?v=4">
+  <link rel="stylesheet" href="/css/board.css?v=4">
 </head>
 <body>
   <div id="app"></div>
+
+  <!-- Debug overlay -->
+  <script>
+  (function(){
+    var d=document.createElement('div');d.id='debug-log';
+    d.style.cssText='position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;font:11px monospace;padding:8px;max-height:40vh;overflow-y:auto;z-index:9999;';
+    document.body.appendChild(d);
+    window._dbg=function(m){
+      var l=document.createElement('div');
+      l.textContent=new Date().toISOString().substr(11,12)+' '+m;
+      d.appendChild(l);d.scrollTop=d.scrollHeight;
+    };
+    window._dbg('HTML loaded');
+    window._dbg('URL: '+location.href);
+    window._dbg('frame_id: '+(new URLSearchParams(location.search).get('frame_id')||'MISSING'));
+    window.onerror=function(msg,src,line){window._dbg('ERR: '+msg+' @'+src+':'+line);};
+  })();
+  </script>
 
   <!-- Socket.IO Client -->
   <script src="/socket.io/socket.io.js"></script>
 
   <!-- Discord Activity SDK (bundled IIFE) -->
-  <script src="/js/discord-sdk.bundle.js?v=3"></script>
+  <script src="/js/discord-sdk.bundle.js?v=4"></script>
 
   <!-- Application JS (load order matters) -->
-  <script src="/js/game-engine-client.js?v=3"></script>
-  <script src="/js/ai-engine-client.js?v=3"></script>
-  <script src="/js/lobby-view.js?v=3"></script>
-  <script src="/js/game-view.js?v=3"></script>
-  <script src="/js/socket-client.js?v=3"></script>
-  <script src="/js/app.js?v=3"></script>
+  <script src="/js/game-engine-client.js?v=4"></script>
+  <script src="/js/ai-engine-client.js?v=4"></script>
+  <script src="/js/lobby-view.js?v=4"></script>
+  <script src="/js/game-view.js?v=4"></script>
+  <script src="/js/socket-client.js?v=4"></script>
+  <script src="/js/app.js?v=4"></script>
 </body>
 </html>
