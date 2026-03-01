@@ -42,23 +42,34 @@ async function initialize() {
 
   // Exchange code for access token via our server
   dbg('SDK: authorize() OK, exchanging code...');
-  var response = await fetch('/api/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: authResult.code }),
-  });
+  var response;
+  try {
+    response = await fetch('/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: authResult.code }),
+    });
+    dbg('SDK: /api/token response status=' + response.status);
+  } catch (fetchErr) {
+    dbg('SDK: /api/token FETCH FAILED: ' + fetchErr.message);
+    throw fetchErr;
+  }
   var data = await response.json();
+  dbg('SDK: /api/token data keys=' + Object.keys(data).join(','));
 
   if (!data.access_token) {
+    dbg('SDK: no access_token! error=' + (data.error || 'unknown'));
     throw new Error(data.error || 'Failed to get access token from server');
   }
 
   discordAccessToken = data.access_token;
 
   // Authenticate with the Discord client
+  dbg('SDK: calling authenticate()...');
   var auth = await discordSdk.commands.authenticate({
     access_token: discordAccessToken,
   });
+  dbg('SDK: authenticate() OK, user=' + (auth.user && auth.user.username));
 
   discordUser = auth.user;
 
