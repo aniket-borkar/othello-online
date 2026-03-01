@@ -77,7 +77,7 @@ app.post('/api/token', async (req, res) => {
     });
   } catch (err) {
     console.error('POST /api/token error:', err);
-    res.status(500).json({ error: 'Internal server error.' });
+    res.status(500).json({ error: err.message || 'Internal server error.' });
   }
 });
 
